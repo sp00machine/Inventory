@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: inventory_db
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: inventory_user
+      POSTGRES_PASSWORD: inventory_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory_user -d inventory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SvelteKit Frontend
+  sveltekit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=developmentproduction
+      - DATABASE_URL=postgresql://inventory_user:inventory_password@postgres:5432/inventory
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: bun run dev --host
+
+volumes:
+  postgres_data:
