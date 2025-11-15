@@ -3,6 +3,7 @@
 This document provides reference information on implementing constraints in Drizzle ORM, particularly for PostgreSQL.
 
 ## Table of Contents
+
 - [Unique Constraints](#unique-constraints)
   - [Single Column](#single-column)
   - [Multiple Columns](#multiple-columns)
@@ -35,16 +36,20 @@ For composite unique constraints across multiple columns:
 ```typescript
 import { pgTable, uuid, text, unique } from "drizzle-orm/pg-core";
 
-export const memberships = pgTable("memberships", {
-  id: uuid("id").primaryKey(),
-  userId: uuid("user_id"),
-  organizationId: uuid("organization_id"),
-}, (table) => [
-  // Ensures a user can only be in an organization once
-  unique().on(table.userId, table.organizationId),
-  // With custom name
-  unique("unique_user_org").on(table.userId, table.organizationId)
-]);
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id"),
+    organizationId: uuid("organization_id"),
+  },
+  (table) => [
+    // Ensures a user can only be in an organization once
+    unique().on(table.userId, table.organizationId),
+    // With custom name
+    unique("unique_user_org").on(table.userId, table.organizationId),
+  ],
+);
 ```
 
 ### Conditional Unique Constraints
@@ -52,35 +57,57 @@ export const memberships = pgTable("memberships", {
 To create a unique constraint that only applies under certain conditions (partial unique index):
 
 ```typescript
-import { pgTable, uuid, text, boolean, uniqueIndex, sql } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  boolean,
+  uniqueIndex,
+  sql,
+} from "drizzle-orm/pg-core";
 
-export const asins = pgTable("asins", {
-  id: uuid("id").primaryKey(),
-  productTypeId: uuid("product_type_id"),
-  isPrimary: boolean("is_primary").default(false),
-}, (table) => [
-  // Only one ASIN can be primary per product type
-  uniqueIndex("idx_primary_asin")
-    .on(table.productTypeId, table.isPrimary)
-    .where(sql`${table.isPrimary} = true`)
-]);
+export const asins = pgTable(
+  "asins",
+  {
+    id: uuid("id").primaryKey(),
+    productTypeId: uuid("product_type_id"),
+    isPrimary: boolean("is_primary").default(false),
+  },
+  (table) => [
+    // Only one ASIN can be primary per product type
+    uniqueIndex("idx_primary_asin")
+      .on(table.productTypeId, table.isPrimary)
+      .where(sql`${table.isPrimary} = true`),
+  ],
+);
 ```
 
 For soft-deleted records (only enforce uniqueness on active records):
 
 ```typescript
-import { pgTable, uuid, text, timestamp, uniqueIndex, sql } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  uniqueIndex,
+  sql,
+} from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey(),
-  email: text("email").notNull(),
-  deletedAt: timestamp("deleted_at"),
-}, (table) => [
-  // Email must be unique among active users
-  uniqueIndex("idx_unique_active_email")
-    .on(table.email)
-    .where(sql`${table.deletedAt} IS NULL`)
-]);
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey(),
+    email: text("email").notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    // Email must be unique among active users
+    uniqueIndex("idx_unique_active_email")
+      .on(table.email)
+      .where(sql`${table.deletedAt} IS NULL`),
+  ],
+);
 ```
 
 ## Foreign Key Constraints
@@ -118,7 +145,7 @@ import { pgTable, integer, serial, customType } from "drizzle-orm/pg-core";
 // Example of a custom type with check constraint
 const positiveInteger = customType<{ data: number }>({
   dataType() {
-    return 'integer check (value > 0)';
+    return "integer check (value > 0)";
   },
 });
 
@@ -165,12 +192,14 @@ Allows multiple NULL values to exist in a unique column:
 ```typescript
 import { pgTable, integer, unique } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: integer("id").primaryKey(),
-  externalId: integer("external_id").unique({ nulls: "not distinct" }),
-}, (table) => [
-  unique().on(table.externalId).nullsNotDistinct()
-]);
+export const users = pgTable(
+  "users",
+  {
+    id: integer("id").primaryKey(),
+    externalId: integer("external_id").unique({ nulls: "not distinct" }),
+  },
+  (table) => [unique().on(table.externalId).nullsNotDistinct()],
+);
 ```
 
 ### Case-Insensitive Unique Constraints
@@ -180,11 +209,15 @@ For case-insensitive uniqueness (like email addresses):
 ```typescript
 import { pgTable, text, uniqueIndex, sql } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey(),
-  email: text("email").notNull(),
-}, (table) => [
-  // Case-insensitive unique email
-  uniqueIndex("idx_unique_email_lower").on(sql`lower(${table.email})`)
-]);
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey(),
+    email: text("email").notNull(),
+  },
+  (table) => [
+    // Case-insensitive unique email
+    uniqueIndex("idx_unique_email_lower").on(sql`lower(${table.email})`),
+  ],
+);
 ```

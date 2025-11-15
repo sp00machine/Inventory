@@ -77,7 +77,7 @@
 	<Navigation.Bar
 		{value}
 		onValueChange={(newValue) => {
-			if (browser) {
+			if (browser && newValue !== value) {
 				goto(`/${newValue}`);
 			}
 		}}

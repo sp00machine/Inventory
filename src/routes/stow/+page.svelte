@@ -13,8 +13,15 @@
     // UI state
     let message = $state("");
     let error = $state("");
-    let selected_holding_item = $state<any>(null);
-    let max_quantity = $state(0);
+
+    // -CL: Use $derived instead of $effect to avoid infinite loops when syncing state
+    const selected_holding_item = $derived(
+        selected_asin && data.holding_location?.contents
+            ? data.holding_location.contents.find(item => item.asin === selected_asin)
+            : null
+    );
+
+    const max_quantity = $derived(selected_holding_item?.quantity || 0);
 
     // Update message/error when form is processed
     $effect(() => {
@@ -26,8 +33,6 @@
             selected_to_location = "";
             quantity = 1;
             notes = "";
-            selected_holding_item = null;
-            max_quantity = 0;
         } else if (form?.error) {
             error = form.error;
             message = "";
@@ -41,19 +46,10 @@
         }
     });
 
-    // Update max quantity when ASIN selection changes
+    // Reset quantity if it exceeds max (side effect only) -CL
     $effect(() => {
-        if (selected_asin && data.holding_location?.contents) {
-            selected_holding_item = data.holding_location.contents.find(item => item.asin === selected_asin);
-            max_quantity = selected_holding_item?.quantity || 0;
-
-            // Reset quantity if it exceeds max
-            if (quantity > max_quantity) {
-                quantity = max_quantity;
-            }
-        } else {
-            selected_holding_item = null;
-            max_quantity = 0;
+        if (quantity > max_quantity && max_quantity > 0) {
+            quantity = max_quantity;
         }
     });
 
@@ -82,31 +78,7 @@
             <p>{error}</p>
         </div>
     {/if}
-
-    <!-- Current Holding Area Contents
-    <div class="mb-6">
-        <h2 class="text-lg font-semibold mb-3">Items in Holding Area</h2>
-        {#if data.holding_location?.contents && data.holding_location.contents.length > 0}
-            <div class="card p-4 space-y-2 max-h-48 overflow-y-auto">
-                {#each data.holding_location.contents as item}
-                    <button
-                        type="button"
-                        class="flex justify-between items-center text-sm p-2 hover:bg-surface-100 rounded cursor-pointer w-full text-left"
-                        onclick={() => selected_asin = item.asin}
-                    >
-                        <span>{item.asin_code} - {item.product_name || 'Unknown'}</span>
-                        <span class="badge variant-filled">{item.quantity}</span>
-                    </button>
-                {/each}
-            </div>
-        {:else}
-            <div class="card p-4 text-center text-surface-600">
-                <p>No items in holding area</p>
-                <p class="text-xs mt-1">Pick some items first to stow them away</p>
-            </div>
-        {/if}
-    </div> -->
-
+    
     {#if holding_asins.length > 0}
         <form method="post" action="?" class="space-y-4">
             <!-- ASIN Selection from Holding Area -->
@@ -115,6 +87,7 @@
                 <SuperAutoCombo
                     bind:value={selected_asin}
                     options={holding_asins}
+                    placeholder="Select or scan an ASIN"
                 />
                 <input type="hidden" name="asin" value={selected_asin} required />
             </label>
@@ -154,6 +127,7 @@
                 <SuperAutoCombo
                     bind:value={selected_to_location}
                     options={storage_locations.map(loc => ({ value: loc.id!, label: loc.name }))}
+                    placeholder="Select or scan a location"
                 />
                 <input type="hidden" name="to_location_id" value={selected_to_location} required />
             </label>

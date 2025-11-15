@@ -234,7 +234,7 @@
             <span class="label-text">Destination</span>
             <SuperAutoCombo
                 bind:value={selected_to_location}
-                input_value={"**Holding Area** (Default)"}
+                placeholder="Holding Area (Default)"
                 options={destination_options()}
             />
             <input type="hidden" name="to_location_id" value={selected_to_location} required />

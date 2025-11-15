@@ -1,4 +1,3 @@
-
 // for the sake of simplicity, we're going to assume there is no noise and everything is perfect
 // eventually we'd like to make each `Read` acutally an average of a few reads to reduce noise
 // but for now, let's keep it simple
@@ -129,122 +128,137 @@ const sample_data = `1,1,aa3ab22e-9310-48e2-b825-c7b107590c1a,33044075685A808000
 1,1,622405e2-a028-4330-9940-417164f940c0,33044075685A808000000006,2025-09-16T00:56:32.340421-04:00[America/Detroit],1,-75,[]
 1,1,622405e2-a028-4330-9940-417164f940c0,33044075685A808000000006,2025-09-16T00:56:30.605069-04:00[America/Detroit],1,-75,[]
 1,1,622405e2-a028-4330-9940-417164f940c0,33044075685A808000000006,2025-09-16T00:56:29.790611-04:00[America/Detroit],1,-75,[]
-`
+`;
 
 // an individual read of a tag, there should be a bunch for each tag
 interface Read {
-    timestamp: number; // epoch ms
-    rssi: number; // signal strength
+  timestamp: number; // epoch ms
+  rssi: number; // signal strength
 }
 
 interface Tag {
-    epc: string;
-    reads: Read[];
-    state: "idle" | "maybe?" | "oh yeah tha'ts going" | "already peaked" | "gone";
+  epc: string;
+  reads: Read[];
+  state: "idle" | "maybe?" | "oh yeah tha'ts going" | "already peaked" | "gone";
 }
-
 
 let tag_list: Tag[] = [];
 
-
 function process_data(data: string) {
-    let lines = data.split("\n");
+  let lines = data.split("\n");
 
-    lines.reverse();
+  lines.reverse();
 
-    for (let line of lines) {
-        let parts = line.split(",");
-        if (parts.length < 8) continue;
-        let epc = parts[3];
-        let rssi = parseInt(parts[6]);
-        if (isNaN(rssi)) continue;
-        handle_read(epc, rssi);
-    }
+  for (let line of lines) {
+    let parts = line.split(",");
+    if (parts.length < 8) continue;
+    let epc = parts[3];
+    let rssi = parseInt(parts[6]);
+    if (isNaN(rssi)) continue;
+    handle_read(epc, rssi);
+  }
 
-// calculates a baseline rssi for a tag based on its reads
-function calculate_baseline(reads: Read[]): number {
+  // calculates a baseline rssi for a tag based on its reads
+  function calculate_baseline(reads: Read[]): number {
     // throw out the top and bottom 10% of reads
-    let sorted = reads.map(r => r.rssi).sort((a, b) => a - b);
+    let sorted = reads.map((r) => r.rssi).sort((a, b) => a - b);
     let ten_percent = Math.floor(sorted.length / 10);
     let trimmed = sorted.slice(ten_percent, sorted.length - ten_percent);
     let sum = trimmed.reduce((a, b) => a + b, 0);
     return sum / trimmed.length;
-}
+  }
 
-
-// called for each read, adds to list and then figures out what's going on
-function handle_read(epc: string, rssi: number) {
-    let tag = tag_list.find(t => t.epc === epc);
+  // called for each read, adds to list and then figures out what's going on
+  function handle_read(epc: string, rssi: number) {
+    let tag = tag_list.find((t) => t.epc === epc);
     if (!tag) {
-        tag = { epc, reads: [], state: "idle" };
-        tag_list.push(tag);
+      tag = { epc, reads: [], state: "idle" };
+      tag_list.push(tag);
     }
 
-    tag.reads.push({ timestamp: Date.now(), rssi: rssi +80 }); // adjust rssi to be positive
+    tag.reads.push({ timestamp: Date.now(), rssi: rssi + 80 }); // adjust rssi to be positive
 
     // do stuff with tag state machine
     update_tag_state(tag);
-}
+  }
 
-// guesses what the tag is actually doing based on reads
-function update_tag_state(tag: Tag) {
+  // guesses what the tag is actually doing based on reads
+  function update_tag_state(tag: Tag) {
     // idle to maybe
     // triggers if the rssi goes above 2x the baseline
     if (tag.state === "idle" && tag.reads.length > 0) {
-        let baseline = calculate_baseline(tag.reads);
-        let latest_read = tag.reads[tag.reads.length - 1];
-        if (latest_read.rssi > 2 * baseline) {
-            tag.state = "maybe?";
-            console.log(`Tag ${tag.epc} state changed to maybe? at time ${new Date(latest_read.timestamp).toISOString()} with rssi ${latest_read.rssi} (baseline ${baseline.toFixed(2)})`);
-        }
+      let baseline = calculate_baseline(tag.reads);
+      let latest_read = tag.reads[tag.reads.length - 1];
+      if (latest_read.rssi > 2 * baseline) {
+        tag.state = "maybe?";
+        console.log(
+          `Tag ${tag.epc} state changed to maybe? at time ${new Date(latest_read.timestamp).toISOString()} with rssi ${latest_read.rssi} (baseline ${baseline.toFixed(2)})`,
+        );
+      }
     }
 
     // maybe to oh yeah that's going
     // triggers if the reads keep going up for 3 reads in a row
     if (tag.state === "maybe?" && tag.reads.length >= 3) {
-        let len = tag.reads.length;
-        if (tag.reads[len - 1].rssi > tag.reads[len - 2].rssi &&
-            tag.reads[len - 2].rssi > tag.reads[len - 3].rssi) {
-            tag.state = "oh yeah tha'ts going";
-            console.log(`Tag ${tag.epc} state changed to oh yeah tha'ts going at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${calculate_baseline(tag.reads).toFixed(2)})`);
-        }
+      let len = tag.reads.length;
+      if (
+        tag.reads[len - 1].rssi > tag.reads[len - 2].rssi &&
+        tag.reads[len - 2].rssi > tag.reads[len - 3].rssi
+      ) {
+        tag.state = "oh yeah tha'ts going";
+        console.log(
+          `Tag ${tag.epc} state changed to oh yeah tha'ts going at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${calculate_baseline(tag.reads).toFixed(2)})`,
+        );
+      }
     }
     // maybe to idle
     // triggers if that was just a fluke and the reads jump back down without reaching a peak
     // ie, if two sequential reads are no longer above 2x the baseline
     if (tag.state === "maybe?" && tag.reads.length >= 2) {
-        let baseline = calculate_baseline(tag.reads);
-        let len = tag.reads.length;
-        if (tag.reads[len - 1].rssi < 2 * baseline &&
-            tag.reads[len - 2].rssi < 2 * baseline) {
-            tag.state = "idle";
-            console.log(`Tag ${tag.epc} state changed back to idle at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${baseline.toFixed(2)})`);
-        }
+      let baseline = calculate_baseline(tag.reads);
+      let len = tag.reads.length;
+      if (
+        tag.reads[len - 1].rssi < 2 * baseline &&
+        tag.reads[len - 2].rssi < 2 * baseline
+      ) {
+        tag.state = "idle";
+        console.log(
+          `Tag ${tag.epc} state changed back to idle at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${baseline.toFixed(2)})`,
+        );
+      }
     }
 
     // oh yeah that's going to already peaked
     // triggers if the reads start going down for 3 reads in a row
     if (tag.state === "oh yeah tha'ts going" && tag.reads.length >= 3) {
-        let len = tag.reads.length;
-        if (tag.reads[len - 1].rssi < tag.reads[len - 2].rssi &&
-            tag.reads[len - 2].rssi < tag.reads[len - 3].rssi) {
-            tag.state = "already peaked";
-            console.log(`Tag ${tag.epc} state changed to already peaked at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${calculate_baseline(tag.reads).toFixed(2)})`);
-        }
+      let len = tag.reads.length;
+      if (
+        tag.reads[len - 1].rssi < tag.reads[len - 2].rssi &&
+        tag.reads[len - 2].rssi < tag.reads[len - 3].rssi
+      ) {
+        tag.state = "already peaked";
+        console.log(
+          `Tag ${tag.epc} state changed to already peaked at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${calculate_baseline(tag.reads).toFixed(2)})`,
+        );
+      }
     }
 
     // already peaked to gone
     // triggers if the reads drop back down to baseline for 2 reads in a row
     if (tag.state === "already peaked" && tag.reads.length >= 2) {
-        let baseline = calculate_baseline(tag.reads);
-        let len = tag.reads.length;
-        if (tag.reads[len - 1].rssi < 2 * baseline &&
-            tag.reads[len - 2].rssi < 2 * baseline) {
-            tag.state = "gone";
-            console.log(`Tag ${tag.epc} state changed to gone at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${baseline.toFixed(2)})`);
-            }
-        }
+      let baseline = calculate_baseline(tag.reads);
+      let len = tag.reads.length;
+      if (
+        tag.reads[len - 1].rssi < 2 * baseline &&
+        tag.reads[len - 2].rssi < 2 * baseline
+      ) {
+        tag.state = "gone";
+        console.log(
+          `Tag ${tag.epc} state changed to gone at time ${new Date(tag.reads[len - 1].timestamp).toISOString()} with rssi ${tag.reads[len - 1].rssi} (baseline ${baseline.toFixed(2)})`,
+        );
+      }
     }
+  }
 }
 
 process_data(sample_data);
