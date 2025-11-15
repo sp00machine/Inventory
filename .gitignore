@@ -1,7 +1,7 @@
 */.env
 bun.lock
-node_modules
 package-lock.json
-drizzle
-.claude
-.svelte-kit
+node_modules/
+drizzle/
+.claude/
+.svelte-kit/
