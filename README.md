@@ -1,38 +1,43 @@
-# sv
+__/\\\______________/\\\__/\\\________/\\\__/\\\\\\\\\\\__/\\\\____________/\\\\_____/\\\\\\\\\\\___        
+ _\/\\\_____________\/\\\_\/\\\_______\/\\\_\/////\\\///__\/\\\\\\________/\\\\\\___/\\\/////////\\\_       
+  _\/\\\_____________\/\\\_\/\\\_______\/\\\_____\/\\\_____\/\\\//\\\____/\\\//\\\__\//\\\______\///__      
+   _\//\\\____/\\\____/\\\__\/\\\\\\\\\\\\\\\_____\/\\\_____\/\\\\///\\\/\\\/_\/\\\___\////\\\_________     
+    __\//\\\__/\\\\\__/\\\___\/\\\/////////\\\_____\/\\\_____\/\\\__\///\\\/___\/\\\______\////\\\______    
+     ___\//\\\/\\\/\\\/\\\____\/\\\_______\/\\\_____\/\\\_____\/\\\____\///_____\/\\\_________\////\\\___   
+      ____\//\\\\\\//\\\\\_____\/\\\_______\/\\\_____\/\\\_____\/\\\_____________\/\\\__/\\\______\//\\\__  
+       _____\//\\\__\//\\\______\/\\\_______\/\\\__/\\\\\\\\\\\_\/\\\_____________\/\\\_\///\\\\\\\\\\\/___ 
+        ______\///____\///_______\///________\///__\///////////__\///______________\///____\///////////_____
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+                        _                                        
+__      ____ _ _ __ ___| |__   ___  _   _ ___  ___               
+\ \ /\ / / _` | '__/ _ \ '_ \ / _ \| | | / __|/ _ \              
+ \ V  V / (_| | | |  __/ | | | (_) | |_| \__ \  __/              
+  \_/\_/ \__,_|_|  \___|_| |_|\___/ \__,_|___/\___|              
+                                                                 
+ _                      _                                        
+(_)_ ____   _____ _ __ | |_ ___  _ __ _   _                      
+| | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |                     
+| | | | \ V /  __/ | | | || (_) | |  | |_| |                     
+|_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |                     
+                                      |___/                      
+                                                             _   
+ _ __ ___   __ _ _ __   __ _  __ _  ___ _ __ ___   ___ _ __ | |_ 
+| '_ ` _ \ / _` | '_ \ / _` |/ _` |/ _ \ '_ ` _ \ / _ \ '_ \| __|
+| | | | | | (_| | | | | (_| | (_| |  __/ | | | | |  __/ | | | |_ 
+|_| |_| |_|\__,_|_| |_|\__,_|\__, |\___|_| |_| |_|\___|_| |_|\__|
+                             |___/                               
+               _                                                 
+ ___ _   _ ___| |_ ___ _ __ ___                                  
+/ __| | | / __| __/ _ \ '_ ` _ \                                 
+\__ \ |_| \__ \ ||  __/ | | | | |                                
+|___/\__, |___/\__\___|_| |_| |_|                                
+     |___/                                                       
 
-## Creating a project
+# What is this?
 
-If you're seeing this, you've probably already done this step. Congrats!
+- A thing I made
+- A system for tracking items across nested locations
 
-```bash
-# create a new project in the current directory
-npx sv create
+Uses Svelte(kit) 5, Drizzle, Postgres
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Runs inside a container
