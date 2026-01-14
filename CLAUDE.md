@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/src/routes/+page.svelte` - Main dashboard with search
 - `/src/routes/+layout.svelte` - Persistent holding area display
 - `/src/db/schema.ts` - Database schema
+- `/todos.md` - A list of things to do
 
 **Critical gotchas:**
 

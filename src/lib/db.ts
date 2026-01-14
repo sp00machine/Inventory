@@ -54,10 +54,13 @@ export async function getAllInventoryItems() {
       // Join with product_types
       product_name: product_types_table.name,
       product_description: product_types_table.description,
+      product_type_is_removed: product_types_table.is_removed,
       // Join with asins
       asin_code: asins_table.asin,
+      asin_is_removed: asins_table.is_removed,
       // Join with locations
       location_name: locations_table.name,
+      location_is_removed: locations_table.is_removed,
     })
     .from(inventory_items_table)
     .leftJoin(
@@ -114,13 +117,27 @@ export async function addOrMergeinventoryItem(
 
 // Get all product types
 export async function getAllProductTypes() {
-  return await db.select().from(product_types_table);
+  return await db
+    .select({
+      id: product_types_table.id,
+      name: product_types_table.name,
+      description: product_types_table.description,
+      primary_asin: product_types_table.primary_asin,
+      is_removed: product_types_table.is_removed,
+    })
+    .from(product_types_table);
 }
 
 // Get a product type by ID
 export async function getProductTypeById(id: string) {
   return await db
-    .select()
+    .select({
+      id: product_types_table.id,
+      name: product_types_table.name,
+      description: product_types_table.description,
+      primary_asin: product_types_table.primary_asin,
+      is_removed: product_types_table.is_removed,
+    })
     .from(product_types_table)
     .where(eq(product_types_table.id, id));
 }
@@ -159,6 +176,7 @@ export async function getAllAsins() {
       asin: asins_table.asin,
       product_type_id: asins_table.product_type_id,
       is_primary: asins_table.is_primary,
+      is_removed: asins_table.is_removed,
       // Join with product_types
       product_name: product_types_table.name,
       product_description: product_types_table.description,
@@ -172,13 +190,26 @@ export async function getAllAsins() {
 
 // Get product types grouped with their associated ASINs and inventory statistics -CL
 export async function getProductTypesWithAsins() {
-  const product_types = await db.select().from(product_types_table);
+  const product_types = await db
+    .select({
+      id: product_types_table.id,
+      name: product_types_table.name,
+      description: product_types_table.description,
+      primary_asin: product_types_table.primary_asin,
+      is_removed: product_types_table.is_removed,
+    })
+    .from(product_types_table);
 
   const result = [];
   for (const product_type of product_types) {
     // Get ASINs for this product type
     const asins = await db
-      .select()
+      .select({
+        asin: asins_table.asin,
+        product_type_id: asins_table.product_type_id,
+        is_primary: asins_table.is_primary,
+        is_removed: asins_table.is_removed,
+      })
       .from(asins_table)
       .where(eq(asins_table.product_type_id, product_type.id));
 
@@ -306,7 +337,12 @@ export async function getProductTypesWithAsins() {
 // Get ASINs for a specific product type
 export async function getAsinsByProductType(product_type_id: string) {
   return await db
-    .select()
+    .select({
+      asin: asins_table.asin,
+      product_type_id: asins_table.product_type_id,
+      is_primary: asins_table.is_primary,
+      is_removed: asins_table.is_removed,
+    })
     .from(asins_table)
     .where(eq(asins_table.product_type_id, product_type_id));
 }
@@ -314,7 +350,12 @@ export async function getAsinsByProductType(product_type_id: string) {
 // Get an ASIN by its code
 export async function getAsinByCode(asinCode: string) {
   const results = await db
-    .select()
+    .select({
+      asin: asins_table.asin,
+      product_type_id: asins_table.product_type_id,
+      is_primary: asins_table.is_primary,
+      is_removed: asins_table.is_removed,
+    })
     .from(asins_table)
     .where(eq(asins_table.asin, asinCode));
   return results[0] || null;
@@ -323,7 +364,12 @@ export async function getAsinByCode(asinCode: string) {
 // Get an ASIN by its code (now the primary key)
 export async function getAsinByAsin(asin: string) {
   const results = await db
-    .select()
+    .select({
+      asin: asins_table.asin,
+      product_type_id: asins_table.product_type_id,
+      is_primary: asins_table.is_primary,
+      is_removed: asins_table.is_removed,
+    })
     .from(asins_table)
     .where(eq(asins_table.asin, asin));
   return results[0] || null;
@@ -357,7 +403,16 @@ export async function addAsin(asin: typeof asins_table.$inferInsert) {
 
 // Get all locations
 export async function getAllLocations() {
-  return await db.select().from(locations_table);
+  return await db
+    .select({
+      id: locations_table.id,
+      name: locations_table.name,
+      description: locations_table.description,
+      parent_location_id: locations_table.parent_location_id,
+      can_contain_items: locations_table.can_contain_items,
+      is_removed: locations_table.is_removed,
+    })
+    .from(locations_table);
 }
 
 // Add a new location
@@ -371,7 +426,14 @@ export async function addLocation(
 // Get a location by name
 export async function getLocationByName(locationName: string) {
   return await db
-    .select()
+    .select({
+      id: locations_table.id,
+      name: locations_table.name,
+      description: locations_table.description,
+      parent_location_id: locations_table.parent_location_id,
+      can_contain_items: locations_table.can_contain_items,
+      is_removed: locations_table.is_removed,
+    })
     .from(locations_table)
     .where(eq(locations_table.name, locationName))
     .then((results) => results[0] || null);
@@ -380,7 +442,14 @@ export async function getLocationByName(locationName: string) {
 // Get a location by ID
 export async function getLocationById(locationId: string) {
   return await db
-    .select()
+    .select({
+      id: locations_table.id,
+      name: locations_table.name,
+      description: locations_table.description,
+      parent_location_id: locations_table.parent_location_id,
+      can_contain_items: locations_table.can_contain_items,
+      is_removed: locations_table.is_removed,
+    })
     .from(locations_table)
     .where(eq(locations_table.id, locationId))
     .then((results) => results[0] || null);
@@ -407,10 +476,13 @@ export async function getLocationWithContents(locationId: string) {
       // Join with product_types
       product_name: product_types_table.name,
       product_description: product_types_table.description,
+      product_type_is_removed: product_types_table.is_removed,
       // Join with asins
       asin_code: asins_table.asin,
+      asin_is_removed: asins_table.is_removed,
       // Join with locations
       location_name: locations_table.name,
+      location_is_removed: locations_table.is_removed,
     })
     .from(inventory_items_table)
     .leftJoin(
@@ -446,6 +518,7 @@ export async function getLocationsWithAsin(asin: string) {
     .select({
       location_id: inventory_items_table.location_id,
       location_name: locations_table.name,
+      location_is_removed: locations_table.is_removed,
       quantity: inventory_items_table.quantity,
     })
     .from(inventory_items_table)

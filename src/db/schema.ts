@@ -25,6 +25,8 @@ export const locations_table = pgTable("locations", {
     (): AnyPgColumn => locations_table.id as any,
     { onDelete: "set null" },
   ),
+  can_contain_items: boolean("can_contain_items").default(true).notNull(),
+  is_removed: boolean("is_removed").default(false).notNull(),
 });
 
 // The product_types table defines the types of products in your inventory system
@@ -34,6 +36,7 @@ export const product_types_table = pgTable("product_types", {
   name: text("name").notNull(),
   description: text("description"),
   primary_asin: text("primary_asin"), // Will be set after ASIN is created
+  is_removed: boolean("is_removed").default(false).notNull(),
 });
 
 // ASIN stands for Ash Standard Item Number
@@ -48,6 +51,7 @@ export const asins_table = pgTable(
       .notNull()
       .references(() => product_types_table.id),
     is_primary: boolean("is_primary").default(false), // Indicates if this is the primary ASIN for the product type
+    is_removed: boolean("is_removed").default(false).notNull(),
   },
   (table) => [
     // Ensures only one ASIN can be primary per product type

@@ -109,10 +109,12 @@
           .map((asin) => ({
             value: asin.asin,
             label: `${asin.asin} - ${asin.product_name ?? "Unknown Product"}`,
+            hidden: asin.is_removed,
           }))}
-        all_values={data.asins.map((asin) => ({
+        all_options={data.asins.map((asin) => ({
           value: asin.asin,
           label: `${asin.asin} - ${asin.product_name ?? "Unknown Product"}`,
+          hidden: asin.is_removed,
         }))}
       />
       <input type="hidden" name="asin" value={selected_asin} required />
@@ -124,20 +126,22 @@
       <SuperAutoCombo
         bind:value={selected_from_location}
         options={data.locations
-          .filter((loc) => {
-            // Only show locations that have the selected ASIN -CL
-            if (!selected_asin) return true;
-            const locations_with_item =
-              locations_with_asin_query?.current ?? [];
-            return locations_with_item.some(
-              (item) => item.location_id === loc.id && (item.quantity ?? 0) > 0
-            );
-          })
-          .map((loc) => ({ value: loc.id!, label: loc.name }))}
-        all_values={data.locations.map((loc) => ({
+          .map((loc) => ({ value: loc.id!, label: loc.name, parent_value: loc.parent_location_id!, valid: loc.can_contain_items, hidden: loc.is_removed }))}
+        all_options={data.locations.map((loc) => ({
           value: loc.id!,
           label: loc.name,
+          valid: loc.can_contain_items,
+          hidden: loc.is_removed,
         }))}
+        filterFn={selected_asin ? (option) => {
+          // Otherwise, only show locations that have the selected ASIN
+          const locsWithAsin = locations_with_asin_query?.current?.map(
+            (loc) => loc.location_id
+          ) || [];
+          console.log(`Filtering location ${option.label} (${option.value}): ${locsWithAsin.includes(option.value)}`);
+          return locsWithAsin.includes(option.value);
+        } : undefined}
+        filter_fn_desc={selected_asin ? "Showing locations with selected ASIN" : undefined}
       />
       <input
         type="hidden"
@@ -154,7 +158,7 @@
         bind:value={selected_to_location}
         options={data.locations
           .filter((loc) => loc.id !== selected_from_location)
-          .map((loc) => ({ value: loc.id!, label: loc.name }))}
+          .map((loc) => ({ value: loc.id!, label: loc.name, parent_value: loc.parent_location_id!, valid: loc.can_contain_items, hidden: loc.is_removed }))}
       />
       <input
         type="hidden"
